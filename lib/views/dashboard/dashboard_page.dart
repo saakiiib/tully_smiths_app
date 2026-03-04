@@ -3,8 +3,8 @@ import 'package:get/get.dart';
 import '../../constants/app_colors.dart';
 import '../../constants/app_text_styles.dart';
 import '../../controllers/dashboard_controller.dart';
-import '../../controllers/auth_controller.dart';
 import '../../widgets/app_bottom_nav.dart';
+import '../../widgets/app_app_bar.dart';
 
 class DashboardPage extends StatelessWidget {
   const DashboardPage({super.key});
@@ -12,29 +12,10 @@ class DashboardPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final dash = Get.put(DashboardController());
-    final auth = Get.find<AuthController>();
 
     return Scaffold(
       backgroundColor: AppColors.background,
-      appBar: AppBar(
-        backgroundColor: AppColors.primary,
-        elevation: 0,
-        title: Row(
-          children: [
-            const SizedBox(width: 8),
-            Text(
-              'Tully Smith',
-              style: AppTextStyles.button.copyWith(color: AppColors.white),
-            ),
-          ],
-        ),
-        actions: [
-          IconButton(
-            onPressed: auth.logout,
-            icon: const Icon(Icons.logout_rounded, color: AppColors.white, size: 20),
-          ),
-        ],
-      ),
+      appBar: const AppTopBar(),
       bottomNavigationBar: const AppBottomNav(currentIndex: 0),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(20),

@@ -4,7 +4,6 @@ import 'package:get_storage/get_storage.dart';
 class DashboardController extends GetxController {
   final _box = GetStorage();
 
-  // These will later come from API
   final totalEmployees = 128.obs;
   final activeEmployees = 104.obs;
   final totalDepartments = 8.obs;
