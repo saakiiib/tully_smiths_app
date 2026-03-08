@@ -32,9 +32,6 @@ class AppBottomNav extends StatelessWidget {
           case 2:
             Get.offAllNamed('/timesheets');
             break;
-          case 3:
-            Get.offAllNamed('/more');
-            break;
         }
       },
       items: const [
@@ -49,10 +46,6 @@ class AppBottomNav extends StatelessWidget {
         BottomNavigationBarItem(
           icon: Icon(Icons.calendar_today_outlined),
           label: 'Timesheets',
-        ),
-        BottomNavigationBarItem(
-          icon: Icon(Icons.menu_rounded),
-          label: 'More',
         ),
       ],
     );
