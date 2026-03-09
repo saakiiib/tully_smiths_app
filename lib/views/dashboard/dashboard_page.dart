@@ -26,7 +26,7 @@ class DashboardPage extends StatelessWidget {
             const SizedBox(height: 8),
             Text('Dashboard', style: AppTextStyles.heading),
             const SizedBox(height: 4),
-            Obx(() => Text(dash.userName.value, style: AppTextStyles.small)),
+            Obx(() => Text(dash.userName.value.toLowerCase(), style: AppTextStyles.small)),
             const SizedBox(height: 24),
 
             Obx(

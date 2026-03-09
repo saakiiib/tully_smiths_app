@@ -21,7 +21,7 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     Get.lazyPut(() => AuthController(), fenix: true);
     return GetMaterialApp(
-      title: 'Tully Smith',
+      title: 'Tully Smiths',
       debugShowCheckedModeBanner: false,
       defaultTransition: Transition.fadeIn,
       transitionDuration: const Duration(milliseconds: 150),

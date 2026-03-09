@@ -20,18 +20,20 @@ class AppTopBar extends StatelessWidget implements PreferredSizeWidget {
       backgroundColor: AppColors.primary,
       elevation: 0,
       title: Row(
+        mainAxisSize: MainAxisSize.min,
         children: [
-          Container(
-            width: 8,
-            height: 8,
-            decoration: const BoxDecoration(
-              color: AppColors.accent,
-              shape: BoxShape.circle,
+          ClipRRect(
+            borderRadius: BorderRadius.circular(14),
+            child: Image.asset(
+              'assets/icon/app_icon.png',
+              width: 45,
+              height: 45,
+              fit: BoxFit.cover,
             ),
           ),
           const SizedBox(width: 8),
           Text(
-            'Tully Smith',
+            'Tully Smiths',
             style: AppTextStyles.button.copyWith(color: AppColors.white),
           ),
         ],
