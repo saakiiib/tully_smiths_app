@@ -1,25 +1,23 @@
+import 'dart:convert';
 import 'package:get/get.dart';
 import 'package:get_storage/get_storage.dart';
+import 'package:http/http.dart' as http;
 import '../services/api_service.dart';
 import '../utils/app_feedback.dart';
 
 class DashboardController extends GetxController {
   final _box = GetStorage();
 
-  final userName = ''.obs;
-  final isLoading = false.obs;
-  final todayJobs = 0.obs;
-  final activeJobs = 0.obs;
-  final pendingJobs = 0.obs;
-  final jobEvents = <DateTime>[].obs;
-  final selectedDay = DateTime.now().obs;
-  final focusedDay = DateTime.now().obs;
+  final userName     = ''.obs;
+  final isLoading    = false.obs;
+  final todayJobs    = 0.obs;
+  final activeJobs   = 0.obs;
+  final pendingJobs  = 0.obs;
+  final selectedDay  = DateTime.now().obs;
+  final focusedDay   = DateTime.now().obs;
 
-  // jobs for selected day
   final selectedDayJobs = <Map<String, dynamic>>[].obs;
-
-  // all assignments raw
-  final allAssignments = <Map<String, dynamic>>[].obs;
+  final allAssignments  = <Map<String, dynamic>>[].obs;
 
   @override
   void onInit() {
@@ -31,24 +29,25 @@ class DashboardController extends GetxController {
   Future<void> fetchDashboard() async {
     try {
       isLoading.value = true;
-      final res = await ApiService.getDashboard();
 
-      todayJobs.value = res['today_jobs'] ?? 0;
-      activeJobs.value = res['active_jobs'] ?? 0;
-      pendingJobs.value = res['pending_jobs'] ?? 0;
+      final res = await http
+          .get(
+            Uri.parse('${ApiService.baseUrl}/dashboard'),
+            headers: ApiService.headers,
+          )
+          .timeout(const Duration(seconds: 10));
 
-      // parse assignments
-      final list = (res['assignments'] as List? ?? []);
+      if (res.statusCode != 200) throw Exception('Failed to load dashboard');
+
+      final body = jsonDecode(res.body) as Map<String, dynamic>;
+
+      todayJobs.value   = body['today_jobs']   ?? 0;
+      activeJobs.value  = body['active_jobs']  ?? 0;
+      pendingJobs.value = body['pending_jobs'] ?? 0;
+
+      final list = (body['assignments'] as List? ?? []);
       allAssignments.value = list.cast<Map<String, dynamic>>();
 
-      // extract job dates for calendar dots
-      jobEvents.value = list.map((a) {
-        final dateStr = a['assigned_date'] as String?;
-        if (dateStr == null) return null;
-        return DateTime.tryParse(dateStr);
-      }).whereType<DateTime>().toList();
-
-      // load today's jobs
       _loadJobsForDay(selectedDay.value);
     } catch (e) {
       AppFeedback.showError(e.toString().replaceAll('Exception: ', ''));
@@ -59,21 +58,20 @@ class DashboardController extends GetxController {
 
   void onDaySelected(DateTime selected, DateTime focused) {
     selectedDay.value = selected;
-    focusedDay.value = focused;
+    focusedDay.value  = focused;
     _loadJobsForDay(selected);
   }
 
   void _loadJobsForDay(DateTime day) {
-    final dateStr =
-        '${day.year}-${day.month.toString().padLeft(2, '0')}-${day.day.toString().padLeft(2, '0')}';
-    selectedDayJobs.value = allAssignments
-        .where((a) => a['assigned_date'] == dateStr)
-        .toList();
+    final dateStr = _fmt(day);
+    selectedDayJobs.value =
+        allAssignments.where((a) => a['assigned_date'] == dateStr).toList();
   }
 
   bool hasJob(DateTime day) {
-    final dateStr =
-        '${day.year}-${day.month.toString().padLeft(2, '0')}-${day.day.toString().padLeft(2, '0')}';
-    return allAssignments.any((a) => a['assigned_date'] == dateStr);
+    return allAssignments.any((a) => a['assigned_date'] == _fmt(day));
   }
+
+  String _fmt(DateTime d) =>
+      '${d.year}-${d.month.toString().padLeft(2, '0')}-${d.day.toString().padLeft(2, '0')}';
 }

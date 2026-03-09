@@ -426,7 +426,7 @@ class _LogCard extends StatelessWidget {
                         size: 13, color: AppColors.textSecondary),
                     const SizedBox(width: 4),
                     Text(
-                      isActive ? '$clockIn — Active' : '$clockIn — ${clockOut ?? '—'}',
+                      isActive ? '$clockIn — Active' : '$clockIn — $clockOut',
                       style: AppTextStyles.small,
                     ),
                   ],

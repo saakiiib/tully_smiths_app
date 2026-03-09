@@ -29,33 +29,39 @@ class DashboardPage extends StatelessWidget {
             Obx(() => Text(dash.userName.value, style: AppTextStyles.small)),
             const SizedBox(height: 24),
 
-            Obx(() => Row(
-                  children: [
-                    _StatCard(
-                      label: "Today's Jobs",
-                      value: '${dash.todayJobs.value}',
-                      icon: Icons.today_outlined,
-                      iconColor: AppColors.accent,
-                    ),
-                    const SizedBox(width: 12),
-                    _StatCard(
-                      label: 'Active',
-                      value: '${dash.activeJobs.value}',
-                      icon: Icons.check_circle_outline_rounded,
-                      iconColor: AppColors.success,
-                    ),
-                    const SizedBox(width: 12),
-                    _StatCard(
-                      label: 'Pending',
-                      value: '${dash.pendingJobs.value}',
-                      icon: Icons.access_time_rounded,
-                      iconColor: AppColors.warning,
-                    ),
-                  ],
-                )),
+            Obx(
+              () => Row(
+                children: [
+                  _StatCard(
+                    label: "Today's",
+                    value: '${dash.todayJobs.value}',
+                    icon: Icons.today_outlined,
+                    iconColor: AppColors.accent,
+                  ),
+                  const SizedBox(width: 12),
+                  _StatCard(
+                    label: 'Active',
+                    value: '${dash.activeJobs.value}',
+                    icon: Icons.check_circle_outline_rounded,
+                    iconColor: AppColors.success,
+                  ),
+                  const SizedBox(width: 12),
+                  _StatCard(
+                    label: 'Pending',
+                    value: '${dash.pendingJobs.value}',
+                    icon: Icons.access_time_rounded,
+                    iconColor: AppColors.warning,
+                  ),
+                ],
+              ),
+            ),
             const SizedBox(height: 24),
 
-            _CalendarWidget(dash: dash),
+            Obx(() {
+              final _ = dash.allAssignments.length;
+              return _CalendarWidget(dash: dash);
+            }),
+
             const SizedBox(height: 24),
 
             Obx(() {
@@ -92,17 +98,20 @@ class DashboardPage extends StatelessWidget {
                         )
                       : Column(
                           children: dash.selectedDayJobs
-                              .map((job) => Padding(
-                                    padding:
-                                        const EdgeInsets.only(bottom: 12),
-                                    child: _JobCard(
-                                      title: job['job_title'] ?? '',
-                                      client: job['client_name'] ?? '',
-                                      time: _formatTime(
-                                          job['start_time'], job['end_time']),
-                                      status: job['status'] ?? '',
+                              .map(
+                                (job) => Padding(
+                                  padding: const EdgeInsets.only(bottom: 12),
+                                  child: _JobCard(
+                                    title: job['job_title'] ?? '',
+                                    client: job['client_name'] ?? '',
+                                    time: _formatTime(
+                                      job['start_time'],
+                                      job['end_time'],
                                     ),
-                                  ))
+                                    status: job['status'] ?? '',
+                                  ),
+                                ),
+                              )
                               .toList(),
                         ),
                 ],
@@ -116,8 +125,18 @@ class DashboardPage extends StatelessWidget {
 
   String _formatDate(DateTime d) {
     const months = [
-      'JAN', 'FEB', 'MAR', 'APR', 'MAY', 'JUN',
-      'JUL', 'AUG', 'SEP', 'OCT', 'NOV', 'DEC'
+      'JAN',
+      'FEB',
+      'MAR',
+      'APR',
+      'MAY',
+      'JUN',
+      'JUL',
+      'AUG',
+      'SEP',
+      'OCT',
+      'NOV',
+      'DEC',
     ];
     const days = ['MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT', 'SUN'];
     return '${days[d.weekday - 1]}, ${months[d.month - 1]} ${d.day}';
@@ -133,13 +152,13 @@ class DashboardPage extends StatelessWidget {
       final hour = h > 12 ? h - 12 : (h == 0 ? 12 : h);
       return '$hour:$m $period';
     }
+
     return end != null ? '${fmt(start)} — ${fmt(end)}' : fmt(start);
   }
 }
 
 class _CalendarWidget extends StatefulWidget {
   final DashboardController dash;
-
   const _CalendarWidget({required this.dash});
 
   @override
@@ -261,18 +280,22 @@ class _StatCard extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Container(
-              width: 34,
-              height: 34,
-              decoration: BoxDecoration(
-                color: iconColor.withValues(alpha: 0.1),
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: Icon(icon, size: 16, color: iconColor),
+            Row(
+              children: [
+                Container(
+                  width: 34,
+                  height: 34,
+                  decoration: BoxDecoration(
+                    color: iconColor.withValues(alpha: 0.1),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Icon(icon, size: 16, color: iconColor),
+                ),
+                const SizedBox(width: 8),
+                Text(value, style: AppTextStyles.heading),
+              ],
             ),
-            const SizedBox(height: 10),
-            Text(value, style: AppTextStyles.heading),
-            const SizedBox(height: 2),
+            const SizedBox(height: 6),
             Text(label, style: AppTextStyles.small),
           ],
         ),
@@ -318,8 +341,11 @@ class _JobCard extends StatelessWidget {
               color: AppColors.primary.withValues(alpha: 0.08),
               borderRadius: BorderRadius.circular(10),
             ),
-            child: const Icon(Icons.work_outline_rounded,
-                color: AppColors.primary, size: 18),
+            child: const Icon(
+              Icons.work_outline_rounded,
+              color: AppColors.primary,
+              size: 18,
+            ),
           ),
           const SizedBox(width: 12),
           Expanded(
@@ -330,23 +356,24 @@ class _JobCard extends StatelessWidget {
                 const SizedBox(height: 2),
                 Text(client, style: AppTextStyles.small),
                 const SizedBox(height: 2),
-                Text(time,
-                    style: AppTextStyles.label
-                        .copyWith(color: AppColors.textSecondary)),
+                Text(
+                  time,
+                  style: AppTextStyles.label.copyWith(
+                    color: AppColors.textSecondary,
+                  ),
+                ),
               ],
             ),
           ),
           Container(
-            padding:
-                const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
             decoration: BoxDecoration(
               color: AppColors.success.withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(6),
             ),
             child: Text(
               status,
-              style:
-                  AppTextStyles.label.copyWith(color: AppColors.success),
+              style: AppTextStyles.label.copyWith(color: AppColors.success),
             ),
           ),
         ],

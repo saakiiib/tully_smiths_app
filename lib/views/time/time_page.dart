@@ -32,7 +32,7 @@ class _NetImage extends StatelessWidget {
             width: width,
             height: height,
             fit: fit,
-            errorBuilder: (_, __, ___) => _defaultIcon(),
+            errorBuilder: (_, _, _) => _defaultIcon(),
             loadingBuilder: (_, child, progress) =>
                 progress == null ? child : _defaultIcon(),
           )
@@ -47,7 +47,7 @@ class _NetImage extends StatelessWidget {
         width: width,
         height: height,
         decoration: BoxDecoration(
-          color: AppColors.primary.withOpacity(0.08),
+          color: AppColors.primary.withValues(alpha: 0.08),
           borderRadius: borderRadius ?? BorderRadius.circular(10),
         ),
         child: Icon(Icons.work_outline_rounded, color: AppColors.primary, size: width * 0.45),
@@ -141,7 +141,7 @@ class _StatCard extends StatelessWidget {
         decoration: BoxDecoration(
           color: AppColors.white,
           borderRadius: BorderRadius.circular(14),
-          boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 12, offset: const Offset(0, 4))],
+          boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.05), blurRadius: 12, offset: const Offset(0, 4))],
         ),
         child: Column(
           children: [
@@ -177,14 +177,14 @@ class _ActiveLogCard extends StatelessWidget {
             end: Alignment.bottomRight,
           ),
           borderRadius: BorderRadius.circular(20),
-          boxShadow: [BoxShadow(color: const Color(0xFF2D6A4F).withOpacity(0.35), blurRadius: 20, offset: const Offset(0, 8))],
+          boxShadow: [BoxShadow(color: const Color(0xFF2D6A4F).withValues(alpha: 0.35), blurRadius: 20, offset: const Offset(0, 8))],
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-              decoration: BoxDecoration(color: Colors.white.withOpacity(0.2), borderRadius: BorderRadius.circular(20)),
+              decoration: BoxDecoration(color: Colors.white.withValues(alpha: 0.2), borderRadius: BorderRadius.circular(20)),
               child: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
@@ -197,13 +197,13 @@ class _ActiveLogCard extends StatelessWidget {
             const SizedBox(height: 14),
             Text(log.jobTitle ?? '—', style: AppTextStyles.button.copyWith(color: Colors.white, fontSize: 18)),
             const SizedBox(height: 6),
-            Text('Clocked in at ${log.clockInTime}', style: AppTextStyles.small.copyWith(color: Colors.white.withOpacity(0.75))),
+            Text('Clocked in at ${log.clockInTime}', style: AppTextStyles.small.copyWith(color: Colors.white.withValues(alpha: 0.75))),
             if (hasLocNote) ...[
               const SizedBox(height: 8),
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                 decoration: BoxDecoration(
-                  color: isVerified ? Colors.green.withOpacity(0.25) : Colors.orange.withOpacity(0.25),
+                color: isVerified ? Colors.green.withValues(alpha: 0.25) : Colors.orange.withValues(alpha: 0.25),
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: Row(
@@ -258,7 +258,7 @@ class _StartCard extends StatelessWidget {
         decoration: BoxDecoration(
           color: AppColors.white,
           borderRadius: BorderRadius.circular(20),
-          boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.06), blurRadius: 16, offset: const Offset(0, 4))],
+          boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.06), blurRadius: 16, offset: const Offset(0, 4))],
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -289,7 +289,7 @@ class _StartCard extends StatelessWidget {
                     margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                     padding: const EdgeInsets.all(14),
                     decoration: BoxDecoration(
-                      color: isSelected ? AppColors.primary.withOpacity(0.08) : Colors.grey.shade50,
+                      color: isSelected ? AppColors.primary.withValues(alpha: 0.08) : Colors.grey.shade50,
                       border: Border.all(color: isSelected ? AppColors.primary : Colors.grey.shade200, width: isSelected ? 1.5 : 1),
                       borderRadius: BorderRadius.circular(14),
                     ),
@@ -421,7 +421,7 @@ class _EntryItem extends StatelessWidget {
       decoration: BoxDecoration(
         color: AppColors.white,
         borderRadius: BorderRadius.circular(14),
-        boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.04), blurRadius: 10, offset: const Offset(0, 3))],
+        boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.04), blurRadius: 10, offset: const Offset(0, 3))],
       ),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.center,
@@ -471,7 +471,7 @@ class _EntryItem extends StatelessWidget {
               if (log.isActive)
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                  decoration: BoxDecoration(color: Colors.green.withOpacity(0.1), borderRadius: BorderRadius.circular(8)),
+                  decoration: BoxDecoration(color: Colors.green.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(8)),
                   child: const Text('Active', style: TextStyle(color: Colors.green, fontSize: 12, fontWeight: FontWeight.w600)),
                 )
               else ...[
@@ -506,118 +506,124 @@ class _CameraScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Colors.black,
-      appBar: AppBar(
+    return PopScope(
+      canPop: false,
+      onPopInvokedWithResult: (didPop, _) {
+        if (!didPop) ctrl.closeCamera();
+      },
+      child: Scaffold(
         backgroundColor: Colors.black,
-        foregroundColor: Colors.white,
-        title: Obx(() => Text(
-          ctrl.isClockOutFlow.value ? 'Clock Out — Take Photo' : 'Clock In — Take Photo',
-          style: const TextStyle(fontSize: 16),
-        )),
-        leading: IconButton(icon: const Icon(Icons.close), onPressed: ctrl.closeCamera),
-      ),
-      body: Obx(() {
-        final captured = ctrl.capturedImagePath.value;
-        return Column(
-          children: [
-            Expanded(
-              child: captured != null
-                  ? Image.file(File(captured), fit: BoxFit.cover, width: double.infinity)
-                  : ctrl.isCameraReady.value && ctrl.cameraController.value != null
-                      ? CameraPreview(ctrl.cameraController.value!)
-                      : const Center(child: CircularProgressIndicator(color: Colors.white)),
-            ),
-            Container(
-              color: Colors.black,
-              padding: const EdgeInsets.symmetric(vertical: 10),
-              child: Center(
+        appBar: AppBar(
+          backgroundColor: Colors.black,
+          foregroundColor: Colors.white,
+          title: Obx(() => Text(
+            ctrl.isClockOutFlow.value ? 'Clock Out — Take Photo' : 'Clock In — Take Photo',
+            style: const TextStyle(fontSize: 16),
+          )),
+          leading: IconButton(icon: const Icon(Icons.close), onPressed: ctrl.closeCamera),
+        ),
+        body: Obx(() {
+          final captured = ctrl.capturedImagePath.value;
+          return Column(
+            children: [
+              Expanded(
+                child: captured != null
+                    ? Image.file(File(captured), fit: BoxFit.cover, width: double.infinity)
+                    : ctrl.isCameraReady.value && ctrl.cameraController.value != null
+                        ? CameraPreview(ctrl.cameraController.value!)
+                        : const Center(child: CircularProgressIndicator(color: Colors.white)),
+              ),
+              Container(
+                color: Colors.black,
+                padding: const EdgeInsets.symmetric(vertical: 10),
+                child: Center(
+                  child: Obx(() {
+                    final status = ctrl.locationStatus.value;
+                    final isGood = status.contains('✓');
+                    final color  = isGood ? Colors.green : Colors.orange;
+                    return Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+                      decoration: BoxDecoration(
+                        color: color.withValues(alpha: 0.15),
+                        borderRadius: BorderRadius.circular(20),
+                        border: Border.all(color: color, width: 0.8),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(Icons.location_on, size: 14, color: color),
+                          const SizedBox(width: 6),
+                          Text(status, style: TextStyle(color: color, fontSize: 13)),
+                        ],
+                      ),
+                    );
+                  }),
+                ),
+              ),
+              Container(
+                color: Colors.black,
+                padding: const EdgeInsets.fromLTRB(20, 8, 20, 32),
                 child: Obx(() {
-                  final status = ctrl.locationStatus.value;
-                  final isGood = status.contains('✓');
-                  final color  = isGood ? Colors.green : Colors.orange;
-                  return Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
-                    decoration: BoxDecoration(
-                      color: color.withOpacity(0.15),
-                      borderRadius: BorderRadius.circular(20),
-                      border: Border.all(color: color, width: 0.8),
-                    ),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Icon(Icons.location_on, size: 14, color: color),
-                        const SizedBox(width: 6),
-                        Text(status, style: TextStyle(color: color, fontSize: 13)),
-                      ],
-                    ),
+                  final captured   = ctrl.capturedImagePath.value;
+                  final submitting = ctrl.isSubmitting.value;
+                  if (captured == null) {
+                    return Center(
+                      child: GestureDetector(
+                        onTap: ctrl.isCapturing.value ? null : ctrl.capturePhoto,
+                        child: Container(
+                          width: 72, height: 72,
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            border: Border.all(color: Colors.white, width: 3),
+                            color: Colors.white.withValues(alpha: 0.15),
+                          ),
+                          child: ctrl.isCapturing.value
+                              ? const Center(child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
+                              : const Icon(Icons.camera_alt_rounded, color: Colors.white, size: 32),
+                        ),
+                      ),
+                    );
+                  }
+                  return Row(
+                    children: [
+                      Expanded(
+                        child: OutlinedButton.icon(
+                          onPressed: submitting ? null : ctrl.retakePhoto,
+                          icon: const Icon(Icons.refresh_rounded),
+                          label: const Text('Retake'),
+                          style: OutlinedButton.styleFrom(
+                            foregroundColor: Colors.white,
+                            side: const BorderSide(color: Colors.white54),
+                            padding: const EdgeInsets.symmetric(vertical: 14),
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        flex: 2,
+                        child: ElevatedButton.icon(
+                          onPressed: submitting ? null : ctrl.confirmAndSubmit,
+                          icon: submitting
+                              ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
+                              : const Icon(Icons.check_rounded),
+                          label: Text(submitting ? 'Submitting…' : 'Confirm & Submit'),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: AppColors.primary,
+                            foregroundColor: Colors.white,
+                            padding: const EdgeInsets.symmetric(vertical: 14),
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                          ),
+                        ),
+                      ),
+                    ],
                   );
                 }),
               ),
-            ),
-            Container(
-              color: Colors.black,
-              padding: const EdgeInsets.fromLTRB(20, 8, 20, 32),
-              child: Obx(() {
-                final captured   = ctrl.capturedImagePath.value;
-                final submitting = ctrl.isSubmitting.value;
-                if (captured == null) {
-                  return Center(
-                    child: GestureDetector(
-                      onTap: ctrl.isCapturing.value ? null : ctrl.capturePhoto,
-                      child: Container(
-                        width: 72, height: 72,
-                        decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          border: Border.all(color: Colors.white, width: 3),
-                          color: Colors.white.withOpacity(0.15),
-                        ),
-                        child: ctrl.isCapturing.value
-                            ? const Center(child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
-                            : const Icon(Icons.camera_alt_rounded, color: Colors.white, size: 32),
-                      ),
-                    ),
-                  );
-                }
-                return Row(
-                  children: [
-                    Expanded(
-                      child: OutlinedButton.icon(
-                        onPressed: submitting ? null : ctrl.retakePhoto,
-                        icon: const Icon(Icons.refresh_rounded),
-                        label: const Text('Retake'),
-                        style: OutlinedButton.styleFrom(
-                          foregroundColor: Colors.white,
-                          side: const BorderSide(color: Colors.white54),
-                          padding: const EdgeInsets.symmetric(vertical: 14),
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                        ),
-                      ),
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      flex: 2,
-                      child: ElevatedButton.icon(
-                        onPressed: submitting ? null : ctrl.confirmAndSubmit,
-                        icon: submitting
-                            ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
-                            : const Icon(Icons.check_rounded),
-                        label: Text(submitting ? 'Submitting…' : 'Confirm & Submit'),
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: AppColors.primary,
-                          foregroundColor: Colors.white,
-                          padding: const EdgeInsets.symmetric(vertical: 14),
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                        ),
-                      ),
-                    ),
-                  ],
-                );
-              }),
-            ),
-          ],
-        );
-      }),
+            ],
+          );
+        }),
+      ),
     );
   }
 }
@@ -628,49 +634,55 @@ class _ChecklistScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: AppColors.background,
-      appBar: AppBar(
-        title: Obx(() => Text(ctrl.isClockOutFlow.value ? 'Clock Out Checklist' : 'Clock In Checklist')),
-        leading: IconButton(icon: const Icon(Icons.close), onPressed: () => ctrl.showChecklist.value = false),
-      ),
-      body: Obx(() {
-        if (ctrl.isChecklistLoading.value) {
-          return const Center(child: CircularProgressIndicator());
-        }
-        return Column(
-          children: [
-            Expanded(
-              child: SingleChildScrollView(
-                padding: const EdgeInsets.all(20),
-                child: Column(
-                  children: ctrl.checklistGroups.map((g) => _ChecklistGroupWidget(group: g, ctrl: ctrl)).toList(),
-                ),
-              ),
-            ),
-            Container(
-              padding: const EdgeInsets.fromLTRB(20, 12, 20, 28),
-              color: AppColors.white,
-              child: Obx(() => SizedBox(
-                width: double.infinity,
-                child: ElevatedButton.icon(
-                  onPressed: ctrl.isSubmitting.value ? null : ctrl.submitChecklist,
-                  icon: ctrl.isSubmitting.value
-                      ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
-                      : const Icon(Icons.check_rounded),
-                  label: Obx(() => Text(ctrl.isClockOutFlow.value ? 'Save & Clock Out' : 'Save & Clock In')),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: AppColors.primary,
-                    foregroundColor: Colors.white,
-                    padding: const EdgeInsets.symmetric(vertical: 14),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+    return PopScope(
+      canPop: false,
+      onPopInvokedWithResult: (didPop, _) {
+        if (!didPop) ctrl.showChecklist.value = false;
+      },
+      child: Scaffold(
+        backgroundColor: AppColors.background,
+        appBar: AppBar(
+          title: Obx(() => Text(ctrl.isClockOutFlow.value ? 'Clock Out Checklist' : 'Clock In Checklist')),
+          leading: IconButton(icon: const Icon(Icons.close), onPressed: () => ctrl.showChecklist.value = false),
+        ),
+        body: Obx(() {
+          if (ctrl.isChecklistLoading.value) {
+            return const Center(child: CircularProgressIndicator());
+          }
+          return Column(
+            children: [
+              Expanded(
+                child: SingleChildScrollView(
+                  padding: const EdgeInsets.all(20),
+                  child: Column(
+                    children: ctrl.checklistGroups.map((g) => _ChecklistGroupWidget(group: g, ctrl: ctrl)).toList(),
                   ),
                 ),
-              )),
-            ),
-          ],
-        );
-      }),
+              ),
+              Container(
+                padding: const EdgeInsets.fromLTRB(20, 12, 20, 28),
+                color: AppColors.white,
+                child: Obx(() => SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton.icon(
+                    onPressed: ctrl.isSubmitting.value ? null : ctrl.submitChecklist,
+                    icon: ctrl.isSubmitting.value
+                        ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
+                        : const Icon(Icons.check_rounded),
+                    label: Obx(() => Text(ctrl.isClockOutFlow.value ? 'Save & Clock Out' : 'Save & Clock In')),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: AppColors.primary,
+                      foregroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(vertical: 14),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                    ),
+                  ),
+                )),
+              ),
+            ],
+          );
+        }),
+      ),
     );
   }
 }
@@ -687,7 +699,7 @@ class _ChecklistGroupWidget extends StatelessWidget {
       decoration: BoxDecoration(
         color: AppColors.white,
         borderRadius: BorderRadius.circular(16),
-        boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.04), blurRadius: 10, offset: const Offset(0, 3))],
+        boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.04), blurRadius: 10, offset: const Offset(0, 3))],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -699,7 +711,8 @@ class _ChecklistGroupWidget extends StatelessWidget {
                 Expanded(child: Text(group.title, style: AppTextStyles.button)),
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                  decoration: BoxDecoration(color: Colors.blue.withOpacity(0.1), borderRadius: BorderRadius.circular(8)),
+                  decoration: BoxDecoration(color: Colors.blue.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(8)),
                   child: Text('${group.items.length} items', style: const TextStyle(fontSize: 12, color: Colors.blue)),
                 ),
               ],

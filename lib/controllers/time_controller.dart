@@ -356,10 +356,18 @@ class TimeController extends GetxController {
 
   Future<void> _fetchLocation() async {
     try {
-      if (!await Geolocator.isLocationServiceEnabled()) { locationStatus.value = 'Location unavailable'; return; }
+      if (!await Geolocator.isLocationServiceEnabled()) {
+        await Geolocator.openLocationSettings();
+        locationStatus.value = 'Location unavailable';
+        return;
+      }
       LocationPermission perm = await Geolocator.checkPermission();
       if (perm == LocationPermission.denied) perm = await Geolocator.requestPermission();
-      if (perm == LocationPermission.deniedForever) { locationStatus.value = 'Location unavailable'; return; }
+      if (perm == LocationPermission.deniedForever) {
+        await Geolocator.openAppSettings();
+        locationStatus.value = 'Location unavailable';
+        return;
+      }
       final pos = await Geolocator.getCurrentPosition(desiredAccuracy: LocationAccuracy.high);
       userLat = pos.latitude;
       userLng = pos.longitude;

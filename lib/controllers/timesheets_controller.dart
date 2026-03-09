@@ -1,11 +1,12 @@
+import 'dart:convert';
 import 'package:get/get.dart';
+import 'package:http/http.dart' as http;
 import '../services/api_service.dart';
 import '../utils/app_feedback.dart';
 
 class TimesheetsController extends GetxController {
-  // ── State ──────────────────────────────────────────────────────────────────
   final isLoading   = false.obs;
-  final mode        = 'weekly'.obs;   // 'daily' | 'weekly' | 'monthly'
+  final mode        = 'weekly'.obs;
   final offset      = 0.obs;
 
   final label       = ''.obs;
@@ -15,14 +16,11 @@ class TimesheetsController extends GetxController {
 
   final logs        = <Map<String, dynamic>>[].obs;
 
-  // ── Lifecycle ──────────────────────────────────────────────────────────────
   @override
   void onInit() {
     super.onInit();
     fetchTimesheet();
   }
-
-  // ── Public helpers ─────────────────────────────────────────────────────────
 
   void setMode(String newMode) {
     mode.value   = newMode;
@@ -36,41 +34,45 @@ class TimesheetsController extends GetxController {
   }
 
   void next() {
-    if (offset.value >= 0) return; // can't go into the future
+    if (offset.value >= 0) return;
     offset.value++;
     fetchTimesheet();
   }
 
   bool get canGoNext => offset.value < 0;
 
-  /// Group logs by date string (yyyy-MM-dd) for the daily-breakdown view.
   Map<String, List<Map<String, dynamic>>> get breakdown {
     final map = <String, List<Map<String, dynamic>>>{};
     for (final log in logs) {
       final raw = log['clock_in_at'] as String?;
       if (raw == null) continue;
-      final dateKey = raw.substring(0, 10); // 'yyyy-MM-dd'
+      final dateKey = raw.substring(0, 10);
       map.putIfAbsent(dateKey, () => []).add(log);
     }
     return map;
   }
 
-  // ── API call ───────────────────────────────────────────────────────────────
   Future<void> fetchTimesheet() async {
     try {
       isLoading.value = true;
 
-      final res = await ApiService.getTimesheet(
-        mode:   mode.value,
-        offset: offset.value,
-      );
+      final res = await http
+          .get(
+            Uri.parse('${ApiService.baseUrl}/time/timesheet?mode=${mode.value}&offset=${offset.value}'),
+            headers: ApiService.headers,
+          )
+          .timeout(const Duration(seconds: 10));
 
-      label.value       = res['label']      ?? '';
-      periodStart.value = res['start']      ?? '';
-      periodEnd.value   = res['end']        ?? '';
-      final rawHours = res["totalHours"];
+      if (res.statusCode != 200) throw Exception('Failed to load timesheet');
+
+      final body = jsonDecode(res.body) as Map<String, dynamic>;
+
+      label.value       = body['label'] ?? '';
+      periodStart.value = body['start'] ?? '';
+      periodEnd.value   = body['end']   ?? '';
+      final rawHours    = body['totalHours'];
       totalHours.value  = rawHours == null ? 0.0 : double.tryParse(rawHours.toString()) ?? 0.0;
-      logs.value        = (res['logs'] as List? ?? []).cast<Map<String, dynamic>>();
+      logs.value        = (body['logs'] as List? ?? []).cast<Map<String, dynamic>>();
     } catch (e) {
       AppFeedback.showError(e.toString().replaceAll('Exception: ', ''));
     } finally {
