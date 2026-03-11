@@ -278,7 +278,7 @@ class _ClientCard extends StatelessWidget {
           ),
           AppCardActions(
             isActive: isActive,
-            onEdit: () => Future.microtask(() => _showForm(context, ctrl, client: client)),
+            onEdit: () => _showForm(context, ctrl, client: client),
             onToggleStatus: () => ctrl.toggleStatus(client['id'], client['status']),
             onDelete: () => ctrl.deleteClient(client['id']),
           ),

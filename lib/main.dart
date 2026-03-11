@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:get_storage/get_storage.dart';
+import 'views/employee/employee_page.dart';
 import 'controllers/auth_controller.dart';
 import 'services/api_service.dart';
 import 'views/auth/login_page.dart';
@@ -33,6 +34,7 @@ class MyApp extends StatelessWidget {
         GetPage(name: '/time', page: () => TimePage()),
         GetPage(name: '/timesheets', page: () => TimesheetsPage()),
         GetPage(name: '/clients', page: () => const ClientPage()),
+        GetPage(name: '/employees', page: () => const EmployeePage()),
       ],
     );
   }
