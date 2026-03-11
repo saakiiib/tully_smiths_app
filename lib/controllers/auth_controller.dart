@@ -41,6 +41,7 @@ class AuthController extends GetxController {
       if (token == null) throw Exception('Token not found in response');
 
       ApiService.saveToken(token);
+      ApiService.saveRole(body['role'] ?? '');
       userEmail.value = email;
       _box.write('user_email', email);
 

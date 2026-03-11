@@ -6,6 +6,8 @@ import '../../constants/app_text_styles.dart';
 import '../../controllers/dashboard_controller.dart';
 import '../../widgets/app_bottom_nav.dart';
 import '../../widgets/app_app_bar.dart';
+import '../../widgets/app_drawer.dart';
+import '../../services/api_service.dart';
 
 class DashboardPage extends StatelessWidget {
   const DashboardPage({super.key});
@@ -17,6 +19,7 @@ class DashboardPage extends StatelessWidget {
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: const AppTopBar(),
+      drawer: ApiService.isWorker ? null : const AppDrawer(),
       bottomNavigationBar: const AppBottomNav(currentIndex: 0),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(20),

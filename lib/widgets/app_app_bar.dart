@@ -3,6 +3,7 @@ import 'package:get/get.dart';
 import '../constants/app_colors.dart';
 import '../constants/app_text_styles.dart';
 import '../controllers/auth_controller.dart';
+import '../services/api_service.dart';
 
 class AppTopBar extends StatelessWidget implements PreferredSizeWidget {
   final String? title;
@@ -15,6 +16,13 @@ class AppTopBar extends StatelessWidget implements PreferredSizeWidget {
   @override
   Widget build(BuildContext context) {
     final auth = Get.find<AuthController>();
+
+    if (!ApiService.isWorker) {
+      return AppBar(
+        backgroundColor: AppColors.background,
+        elevation: 0,
+      );
+    }
 
     return AppBar(
       backgroundColor: AppColors.primary,

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../constants/app_colors.dart';
 import '../constants/app_text_styles.dart';
+import '../services/api_service.dart';
 
 class AppBottomNav extends StatelessWidget {
   final int currentIndex;
@@ -10,6 +11,8 @@ class AppBottomNav extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    if (!ApiService.isWorker) return const SizedBox.shrink();
+
     return BottomNavigationBar(
       currentIndex: currentIndex,
       selectedItemColor: AppColors.primary,
@@ -21,7 +24,6 @@ class AppBottomNav extends StatelessWidget {
       unselectedLabelStyle: AppTextStyles.label,
       onTap: (i) {
         if (i == currentIndex) return;
-
         switch (i) {
           case 0:
             Get.offAllNamed('/dashboard');
