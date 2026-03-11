@@ -8,7 +8,8 @@ class ApiService {
   // static const String baseUrl = 'https://www.tullysmith.hschub.co.uk/api';
 
   // local
-  static const String baseUrl = 'http://192.168.0.102:8000/api';
+  static const String baseUrl = 'http://192.168.0.106:8000/api';
+  
   static final _box            = GetStorage();
   static const _timeout        = Duration(seconds: 10);
 
