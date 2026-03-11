@@ -11,6 +11,8 @@ class AppDrawer extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final auth = Get.find<AuthController>();
+    final role = ApiService.role?.toLowerCase() ?? '';
+    final isAdminOrSuperAdmin = role == 'admin' || role == 'super admin';
 
     return Drawer(
       backgroundColor: AppColors.white,
@@ -52,11 +54,63 @@ class AppDrawer extends StatelessWidget {
               child: ListView(
                 padding: const EdgeInsets.symmetric(vertical: 8),
                 children: [
-                  _DrawerItem(
+                  const _DrawerItem(
                     icon: Icons.dashboard_outlined,
                     label: 'Dashboard',
                     route: '/dashboard',
                   ),
+                  const _DrawerItem(
+                    icon: Icons.access_time_rounded,
+                    label: 'Time',
+                    route: '/time',
+                  ),
+                  const _DrawerItem(
+                    icon: Icons.calendar_today_outlined,
+                    label: 'Timesheets',
+                    route: '/timesheets',
+                  ),
+                  if (isAdminOrSuperAdmin) ...[
+                    const _DrawerItem(
+                      icon: Icons.calendar_month_outlined,
+                      label: 'Calendar',
+                      route: '/calendar',
+                    ),
+                    const _DrawerItem(
+                      icon: Icons.work_outline_rounded,
+                      label: 'Jobs',
+                      route: '/jobs',
+                    ),
+                    const _DrawerItem(
+                      icon: Icons.file_copy_outlined,
+                      label: 'Approvals',
+                      route: '/approvals',
+                    ),
+                    const _DrawerItem(
+                      icon: Icons.bar_chart_rounded,
+                      label: 'Reports',
+                      route: '/reports',
+                    ),
+                    const _DrawerItem(
+                      icon: Icons.person_outline_rounded,
+                      label: 'Clients',
+                      route: '/clients',
+                    ),
+                    const _DrawerItem(
+                      icon: Icons.checklist_rounded,
+                      label: 'Checklist',
+                      route: '/checklist',
+                    ),
+                    const _DrawerItem(
+                      icon: Icons.people_outline_rounded,
+                      label: 'Employees',
+                      route: '/employees',
+                    ),
+                    const _DrawerItem(
+                      icon: Icons.shield_outlined,
+                      label: 'Roles',
+                      route: '/roles',
+                    ),
+                  ],
                 ],
               ),
             ),
