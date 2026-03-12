@@ -503,63 +503,66 @@ class _JobCard extends StatelessWidget {
     final status   = job['status']?.toString() ?? 'draft';
     final priority = job['priority']?.toString() ?? 'low';
 
-    return Container(
-      margin: const EdgeInsets.only(bottom: 12),
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: AppColors.white,
-        borderRadius: BorderRadius.circular(12),
-        boxShadow: [
-          BoxShadow(color: Colors.black.withValues(alpha: 0.05), blurRadius: 10, offset: const Offset(0, 3)),
-        ],
-      ),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Container(
-            width: 42,
-            height: 42,
-            decoration: BoxDecoration(
-              color: AppColors.primary.withValues(alpha: 0.08),
-              borderRadius: BorderRadius.circular(10),
+    return GestureDetector(
+      onTap: () => Get.toNamed('/jobs/detail', arguments: job['id']),
+      child: Container(
+        margin: const EdgeInsets.only(bottom: 12),
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: AppColors.white,
+          borderRadius: BorderRadius.circular(12),
+          boxShadow: [
+            BoxShadow(color: Colors.black.withValues(alpha: 0.05), blurRadius: 10, offset: const Offset(0, 3)),
+          ],
+        ),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Container(
+              width: 42,
+              height: 42,
+              decoration: BoxDecoration(
+                color: AppColors.primary.withValues(alpha: 0.08),
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: const Icon(Icons.work_outline_rounded, color: AppColors.primary, size: 20),
             ),
-            child: const Icon(Icons.work_outline_rounded, color: AppColors.primary, size: 20),
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(job['job_title'] ?? '', style: AppTextStyles.body),
-                const SizedBox(height: 2),
-                Text(job['job_id'] ?? '', style: AppTextStyles.small),
-                Text(job['client_name'] ?? '-', style: AppTextStyles.small),
-                if ((job['city'] ?? '').toString().isNotEmpty || (job['postcode'] ?? '').toString().isNotEmpty)
-                  Text('${job['city'] ?? ''} ${job['postcode'] ?? ''}'.trim(), style: AppTextStyles.small),
-                const SizedBox(height: 6),
-                Row(
-                  children: [
-                    _badge(status[0].toUpperCase() + status.substring(1), _statusColor(status)),
-                    const SizedBox(width: 6),
-                    _badge(priority[0].toUpperCase() + priority.substring(1), _priorityColor(priority)),
-                  ],
-                ),
-                if (job['start_date'] != null || job['end_date'] != null) ...[
-                  const SizedBox(height: 4),
-                  Text(
-                    '${job['start_date'] ?? '-'}  →  ${job['end_date'] ?? '-'}',
-                    style: AppTextStyles.label.copyWith(color: AppColors.textSecondary),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(job['job_title'] ?? '', style: AppTextStyles.body),
+                  const SizedBox(height: 2),
+                  Text(job['job_id'] ?? '', style: AppTextStyles.small),
+                  Text(job['client_name'] ?? '-', style: AppTextStyles.small),
+                  if ((job['city'] ?? '').toString().isNotEmpty || (job['postcode'] ?? '').toString().isNotEmpty)
+                    Text('${job['city'] ?? ''} ${job['postcode'] ?? ''}'.trim(), style: AppTextStyles.small),
+                  const SizedBox(height: 6),
+                  Row(
+                    children: [
+                      _badge(status[0].toUpperCase() + status.substring(1), _statusColor(status)),
+                      const SizedBox(width: 6),
+                      _badge(priority[0].toUpperCase() + priority.substring(1), _priorityColor(priority)),
+                    ],
                   ),
+                  if (job['start_date'] != null || job['end_date'] != null) ...[
+                    const SizedBox(height: 4),
+                    Text(
+                      '${job['start_date'] ?? '-'}  →  ${job['end_date'] ?? '-'}',
+                      style: AppTextStyles.label.copyWith(color: AppColors.textSecondary),
+                    ),
+                  ],
                 ],
-              ],
+              ),
             ),
-          ),
-          AppCardActions(
-            isActive: true,
-            onEdit: () => _openForm(context, ctrl, job: job),
-            onDelete: () => ctrl.deleteJob(job['id']),
-          ),
-        ],
+            AppCardActions(
+              isActive: true,
+              onEdit: () => _openForm(context, ctrl, job: job),
+              onDelete: () => ctrl.deleteJob(job['id']),
+            ),
+          ],
+        ),
       ),
     );
   }

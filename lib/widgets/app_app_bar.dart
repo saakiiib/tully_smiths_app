@@ -27,24 +27,29 @@ class AppTopBar extends StatelessWidget implements PreferredSizeWidget {
     return AppBar(
       backgroundColor: AppColors.primary,
       elevation: 0,
-      title: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          ClipRRect(
-            borderRadius: BorderRadius.circular(14),
-            child: Image.asset(
-              'assets/icon/app_icon.png',
-              width: 45,
-              height: 45,
-              fit: BoxFit.cover,
+      automaticallyImplyLeading: false,
+      titleSpacing: 0,
+      title: Padding(
+        padding: const EdgeInsets.only(left: 16),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            ClipRRect(
+              borderRadius: BorderRadius.circular(14),
+              child: Image.asset(
+                'assets/icon/app_icon.png',
+                width: 45,
+                height: 45,
+                fit: BoxFit.cover,
+              ),
             ),
-          ),
-          const SizedBox(width: 8),
-          Text(
-            'Tully Smiths',
-            style: AppTextStyles.button.copyWith(color: AppColors.white),
-          ),
-        ],
+            const SizedBox(width: 8),
+            Text(
+              'Tully Smiths',
+              style: AppTextStyles.button.copyWith(color: AppColors.white),
+            ),
+          ],
+        ),
       ),
       actions: [
         IconButton(

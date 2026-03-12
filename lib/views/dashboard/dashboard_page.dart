@@ -105,6 +105,7 @@ class DashboardPage extends StatelessWidget {
                                 (job) => Padding(
                                   padding: const EdgeInsets.only(bottom: 12),
                                   child: _JobCard(
+                                    jobId: job['service_job_id'],
                                     title: job['job_title'] ?? '',
                                     client: job['client_name'] ?? '',
                                     time: _formatTime(
@@ -308,12 +309,14 @@ class _StatCard extends StatelessWidget {
 }
 
 class _JobCard extends StatelessWidget {
+  final dynamic jobId;
   final String title;
   final String client;
   final String time;
   final String status;
 
   const _JobCard({
+    required this.jobId,
     required this.title,
     required this.client,
     required this.time,
@@ -322,64 +325,67 @@ class _JobCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: AppColors.white,
-        borderRadius: BorderRadius.circular(12),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.05),
-            blurRadius: 10,
-            offset: const Offset(0, 3),
-          ),
-        ],
-      ),
-      child: Row(
-        children: [
-          Container(
-            width: 42,
-            height: 42,
-            decoration: BoxDecoration(
-              color: AppColors.primary.withValues(alpha: 0.08),
-              borderRadius: BorderRadius.circular(10),
+    return GestureDetector(
+      onTap: () => Get.toNamed('/jobs/detail', arguments: jobId),
+      child: Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: AppColors.white,
+          borderRadius: BorderRadius.circular(12),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.05),
+              blurRadius: 10,
+              offset: const Offset(0, 3),
             ),
-            child: const Icon(
-              Icons.work_outline_rounded,
-              color: AppColors.primary,
-              size: 18,
+          ],
+        ),
+        child: Row(
+          children: [
+            Container(
+              width: 42,
+              height: 42,
+              decoration: BoxDecoration(
+                color: AppColors.primary.withValues(alpha: 0.08),
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: const Icon(
+                Icons.work_outline_rounded,
+                color: AppColors.primary,
+                size: 18,
+              ),
             ),
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(title, style: AppTextStyles.body),
-                const SizedBox(height: 2),
-                Text(client, style: AppTextStyles.small),
-                const SizedBox(height: 2),
-                Text(
-                  time,
-                  style: AppTextStyles.label.copyWith(
-                    color: AppColors.textSecondary,
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(title, style: AppTextStyles.body),
+                  const SizedBox(height: 2),
+                  Text(client, style: AppTextStyles.small),
+                  const SizedBox(height: 2),
+                  Text(
+                    time,
+                    style: AppTextStyles.label.copyWith(
+                      color: AppColors.textSecondary,
+                    ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
-          ),
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-            decoration: BoxDecoration(
-              color: AppColors.success.withValues(alpha: 0.1),
-              borderRadius: BorderRadius.circular(6),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+              decoration: BoxDecoration(
+                color: AppColors.success.withValues(alpha: 0.1),
+                borderRadius: BorderRadius.circular(6),
+              ),
+              child: Text(
+                status,
+                style: AppTextStyles.label.copyWith(color: AppColors.success),
+              ),
             ),
-            child: Text(
-              status,
-              style: AppTextStyles.label.copyWith(color: AppColors.success),
-            ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }

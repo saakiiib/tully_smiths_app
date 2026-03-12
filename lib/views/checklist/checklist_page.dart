@@ -371,7 +371,7 @@ class _ChecklistFormState extends State<_ChecklistForm> {
             children: [
               Expanded(
                 child: DropdownButtonFormField<String>(
-                  value: items[i]['type']?.toString(),
+                  initialValue: items[i]['type']?.toString(),
                   dropdownColor: Colors.white,
                   style: AppTextStyles.body,
                   decoration: InputDecoration(
