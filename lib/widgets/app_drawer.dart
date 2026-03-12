@@ -105,11 +105,6 @@ class AppDrawer extends StatelessWidget {
                       label: 'Employees',
                       route: '/employees',
                     ),
-                    const _DrawerItem(
-                      icon: Icons.shield_outlined,
-                      label: 'Roles',
-                      route: '/roles',
-                    ),
                   ],
                 ],
               ),

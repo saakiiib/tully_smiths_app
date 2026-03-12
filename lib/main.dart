@@ -9,6 +9,7 @@ import 'views/dashboard/dashboard_page.dart';
 import 'views/time/time_page.dart'; 
 import 'views/timesheets/timesheets_page.dart';
 import 'views/client/client_page.dart';
+import 'views/checklist/checklist_page.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -35,6 +36,7 @@ class MyApp extends StatelessWidget {
         GetPage(name: '/timesheets', page: () => TimesheetsPage()),
         GetPage(name: '/clients', page: () => const ClientPage()),
         GetPage(name: '/employees', page: () => const EmployeePage()),
+        GetPage(name: '/checklist', page: () => const ChecklistPage()),
       ],
     );
   }
