@@ -12,6 +12,7 @@ import 'views/client/client_page.dart';
 import 'views/checklist/checklist_page.dart';
 import 'views/jobs/job_page.dart';
 import 'views/jobs/job_detail_page.dart';
+import 'views/approval/approval_page.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -41,6 +42,7 @@ class MyApp extends StatelessWidget {
         GetPage(name: '/checklist', page: () => const ChecklistPage()),
         GetPage(name: '/jobs', page: () => const JobPage()),
         GetPage(name: '/jobs/detail', page: () => JobDetailPage(jobId: Get.arguments)),
+        GetPage(name: '/approvals', page: () => const ApprovalPage()),
       ],
     );
   }
