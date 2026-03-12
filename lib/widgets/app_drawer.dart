@@ -86,11 +86,6 @@ class AppDrawer extends StatelessWidget {
                       route: '/approvals',
                     ),
                     const _DrawerItem(
-                      icon: Icons.bar_chart_rounded,
-                      label: 'Reports',
-                      route: '/reports',
-                    ),
-                    const _DrawerItem(
                       icon: Icons.person_outline_rounded,
                       label: 'Clients',
                       route: '/clients',
