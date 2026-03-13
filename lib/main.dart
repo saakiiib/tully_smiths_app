@@ -14,6 +14,7 @@ import 'views/jobs/job_page.dart';
 import 'views/jobs/job_detail_page.dart';
 import 'views/approval/approval_page.dart';
 import 'views/calendar/calendar_page.dart';
+import 'views/admin_time/admin_time_page.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -37,6 +38,7 @@ class MyApp extends StatelessWidget {
         GetPage(name: '/login', page: () => const LoginPage()),
         GetPage(name: '/dashboard', page: () => DashboardPage()),
         GetPage(name: '/time', page: () => TimePage()),
+        GetPage(name: '/admin/time', page: () => const AdminTimePage()),
         GetPage(name: '/timesheets', page: () => TimesheetsPage()),
         GetPage(name: '/clients', page: () => const ClientPage()),
         GetPage(name: '/employees', page: () => const EmployeePage()),

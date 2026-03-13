@@ -62,7 +62,7 @@ class AppDrawer extends StatelessWidget {
                   const _DrawerItem(
                     icon: Icons.access_time_rounded,
                     label: 'Time',
-                    route: '/time',
+                    route: '/admin/time',
                   ),
                   const _DrawerItem(
                     icon: Icons.calendar_today_outlined,
