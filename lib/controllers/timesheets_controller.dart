@@ -5,16 +5,16 @@ import '../services/api_service.dart';
 import '../utils/app_feedback.dart';
 
 class TimesheetsController extends GetxController {
-  final isLoading   = false.obs;
-  final mode        = 'weekly'.obs;
-  final offset      = 0.obs;
-
-  final label       = ''.obs;
-  final periodStart = ''.obs;
-  final periodEnd   = ''.obs;
-  final totalHours  = 0.0.obs;
-
-  final logs        = <Map<String, dynamic>>[].obs;
+  final isLoading        = false.obs;
+  final mode             = 'weekly'.obs;
+  final offset           = 0.obs;
+  final label            = ''.obs;
+  final periodStart      = ''.obs;
+  final periodEnd        = ''.obs;
+  final totalHours       = 0.0.obs;
+  final logs             = <Map<String, dynamic>>[].obs;
+  final workers          = <Map<String, dynamic>>[].obs;
+  final selectedWorker   = Rxn<Map<String, dynamic>>();
 
   @override
   void onInit() {
@@ -41,6 +41,11 @@ class TimesheetsController extends GetxController {
 
   bool get canGoNext => offset.value < 0;
 
+  void selectWorker(Map<String, dynamic>? worker) {
+    selectedWorker.value = worker;
+    fetchTimesheet();
+  }
+
   Map<String, List<Map<String, dynamic>>> get breakdown {
     final map = <String, List<Map<String, dynamic>>>{};
     for (final log in logs) {
@@ -56,12 +61,15 @@ class TimesheetsController extends GetxController {
     try {
       isLoading.value = true;
 
-      final res = await http
-          .get(
-            Uri.parse('${ApiService.baseUrl}/time/timesheet?mode=${mode.value}&offset=${offset.value}'),
-            headers: ApiService.headers,
-          )
-          .timeout(const Duration(seconds: 10));
+      final params = {
+        'mode':   mode.value,
+        'offset': '${offset.value}',
+        if (!ApiService.isWorker && selectedWorker.value != null)
+          'worker_id': '${selectedWorker.value!['id']}',
+      };
+
+      final uri = Uri.parse('${ApiService.baseUrl}/time/timesheet').replace(queryParameters: params);
+      final res = await http.get(uri, headers: ApiService.headers).timeout(const Duration(seconds: 10));
 
       if (res.statusCode != 200) throw Exception('Failed to load timesheet');
 
@@ -70,9 +78,12 @@ class TimesheetsController extends GetxController {
       label.value       = body['label'] ?? '';
       periodStart.value = body['start'] ?? '';
       periodEnd.value   = body['end']   ?? '';
-      final rawHours    = body['totalHours'];
-      totalHours.value  = rawHours == null ? 0.0 : double.tryParse(rawHours.toString()) ?? 0.0;
+      totalHours.value  = double.tryParse(body['totalHours']?.toString() ?? '') ?? 0.0;
       logs.value        = (body['logs'] as List? ?? []).cast<Map<String, dynamic>>();
+
+      if (body['workers'] != null) {
+        workers.value = (body['workers'] as List).cast<Map<String, dynamic>>();
+      }
     } catch (e) {
       AppFeedback.showError(e.toString().replaceAll('Exception: ', ''));
     } finally {
