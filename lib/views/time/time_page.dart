@@ -8,6 +8,8 @@ import '../../widgets/app_bottom_nav.dart';
 import '../../widgets/app_app_bar.dart';
 import '../../constants/app_text_styles.dart';
 import '../../constants/app_colors.dart';
+import '../../services/api_service.dart';
+import '../../widgets/app_drawer.dart';
 
 class _NetImage extends StatelessWidget {
   final String? url;
@@ -77,6 +79,7 @@ class _MainScreen extends StatelessWidget {
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: const AppTopBar(),
+      drawer: ApiService.isWorker ? null : const AppDrawer(),
       bottomNavigationBar: const AppBottomNav(currentIndex: 1),
       body: Obx(() {
         if (ctrl.isLoading.value) {
