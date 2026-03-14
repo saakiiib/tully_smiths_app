@@ -1600,40 +1600,85 @@ class _TimeLogsTab extends StatelessWidget {
                     ),
                   ),
                 ],
+
                 if (log['clock_in_lat'] != null &&
                     log['clock_in_lng'] != null) ...[
                   const SizedBox(height: 8),
-                  GestureDetector(
-                    onTap: () => launchUrl(
-                      Uri.parse(
-                        'https://maps.google.com/?q=${log['clock_in_lat']},${log['clock_in_lng']}',
-                      ),
-                      mode: LaunchMode.externalApplication,
-                    ),
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(vertical: 8),
-                      decoration: BoxDecoration(
-                        border: Border.all(color: AppColors.border),
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          const Icon(
-                            Icons.map_outlined,
-                            size: 16,
-                            color: AppColors.primary,
+                  Row(
+                    children: [
+                      Expanded(
+                        child: GestureDetector(
+                          onTap: () => launchUrl(
+                            Uri.parse(
+                              'https://maps.google.com/?q=${log['clock_in_lat']},${log['clock_in_lng']}',
+                            ),
+                            mode: LaunchMode.externalApplication,
                           ),
-                          const SizedBox(width: 6),
-                          Text(
-                            'View Location',
-                            style: AppTextStyles.small.copyWith(
-                              color: AppColors.primary,
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(vertical: 8),
+                            decoration: BoxDecoration(
+                              border: Border.all(color: AppColors.border),
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                const Icon(
+                                  Icons.login_rounded,
+                                  size: 16,
+                                  color: AppColors.success,
+                                ),
+                                const SizedBox(width: 6),
+                                Text(
+                                  'Clock In Location',
+                                  style: AppTextStyles.small.copyWith(
+                                    color: AppColors.success,
+                                  ),
+                                ),
+                              ],
                             ),
                           ),
-                        ],
+                        ),
                       ),
-                    ),
+                      if (log['clock_out_lat'] != null &&
+                          log['clock_out_lng'] != null) ...[
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: GestureDetector(
+                            onTap: () => launchUrl(
+                              Uri.parse(
+                                'https://maps.google.com/?q=${log['clock_out_lat']},${log['clock_out_lng']}',
+                              ),
+                              mode: LaunchMode.externalApplication,
+                            ),
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(vertical: 8),
+                              decoration: BoxDecoration(
+                                border: Border.all(color: AppColors.border),
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                              child: Row(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  const Icon(
+                                    Icons.logout_rounded,
+                                    size: 16,
+                                    color: AppColors.error,
+                                  ),
+                                  const SizedBox(width: 6),
+                                  Text(
+                                    'Clock Out Location',
+                                    style: AppTextStyles.small.copyWith(
+                                      color: AppColors.error,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ],
                   ),
                 ],
               ],
