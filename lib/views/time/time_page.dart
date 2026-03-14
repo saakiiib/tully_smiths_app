@@ -206,7 +206,7 @@ class _ActiveLogCard extends StatelessWidget {
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                 decoration: BoxDecoration(
-                color: isVerified ? Colors.green.withValues(alpha: 0.25) : Colors.orange.withValues(alpha: 0.25),
+                  color: isVerified ? Colors.green.withValues(alpha: 0.25) : Colors.orange.withValues(alpha: 0.25),
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: Row(
@@ -714,8 +714,10 @@ class _ChecklistGroupWidget extends StatelessWidget {
                 Expanded(child: Text(group.title, style: AppTextStyles.button)),
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                  decoration: BoxDecoration(color: Colors.blue.withValues(alpha: 0.1),
-                  borderRadius: BorderRadius.circular(8)),
+                  decoration: BoxDecoration(
+                    color: Colors.blue.withValues(alpha: 0.1),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
                   child: Text('${group.items.length} items', style: const TextStyle(fontSize: 12, color: Colors.blue)),
                 ),
               ],
@@ -759,7 +761,7 @@ class _ChecklistItemWidgetState extends State<_ChecklistItemWidget> {
     _textCtrl      = TextEditingController(text: widget.item.existingAnswer ?? '');
   }
 
-  String get _key => '${widget.groupId}_${widget.item.id}';
+  String get _key => '${widget.groupId}__${widget.item.id}';
 
   @override
   Widget build(BuildContext context) {
@@ -830,7 +832,10 @@ class _ChecklistItemWidgetState extends State<_ChecklistItemWidget> {
                 hintText: 'Enter answer…',
                 hintStyle: const TextStyle(fontSize: 13),
                 contentPadding: const EdgeInsets.all(12),
-                border: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: BorderSide(color: Colors.grey.shade300)),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(10),
+                  borderSide: BorderSide(color: Colors.grey.shade300),
+                ),
               ),
               onChanged: (v) => widget.ctrl.setChecklistAnswer(_key, v),
             ),

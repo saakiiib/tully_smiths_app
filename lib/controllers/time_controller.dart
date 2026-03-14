@@ -118,7 +118,7 @@ class TimeLog {
       clockInTime: j['clock_in_time'] ?? '',
       clockOutTime: j['clock_out_time'],
       totalHours: j['total_hours_formatted'],
-      clockInPhoto:  j['clock_in_photo'],
+      clockInPhoto: j['clock_in_photo'],
       clockOutPhoto: j['clock_out_photo'],
       locationNote: j['location_note'],
       isActive: j['clock_out_at'] == null,
@@ -156,13 +156,15 @@ class TimeController extends GetxController {
   final showCameraScreen = false.obs;
   final showChecklist    = false.obs;
 
+  String _currentChecklistType = 'clock_in';
+  int? _currentServiceJobId;
+
   @override
   void onInit() {
     super.onInit();
     loadData();
   }
 
-  // ── Load data ─────────────────────────────────────────────────────────
   Future<void> loadData() async {
     isLoading.value = true;
     try {
@@ -178,13 +180,14 @@ class TimeController extends GetxController {
         weekHours.value   = (data['weekHours'] as num).toStringAsFixed(2);
         monthHours.value  = (data['monthHours'] as num).toStringAsFixed(2);
       }
-    } catch (_) {}
+    } catch (e, st) {
+      debugPrint('loadData error: $e\n$st');
+    }
     isLoading.value = false;
   }
 
   void selectAssignment(JobAssignment a) => selectedAssignment.value = a;
 
-  // ── Clock In tapped ───────────────────────────────────────────────────
   Future<void> onClockInTapped() async {
     if (selectedAssignment.value == null) {
       AppFeedback.showError('Please select a job first.');
@@ -207,7 +210,6 @@ class TimeController extends GetxController {
     _startClockInFlow();
   }
 
-  // ── Clock Out tapped ──────────────────────────────────────────────────
   Future<void> onClockOutTapped() async {
     if (activeLog.value == null) return;
 
@@ -228,28 +230,30 @@ class TimeController extends GetxController {
     _startClockOutFlow();
   }
 
-  // ── Flows ─────────────────────────────────────────────────────────────
   Future<void> _startClockInFlow() async {
     isClockOutFlow.value = false;
+    _currentChecklistType = 'clock_in';
     final jobId = selectedAssignment.value?.serviceJobId;
     if (jobId != null) {
+      _currentServiceJobId = jobId;
       final has = await _fetchChecklists(jobId, 'clock_in');
       if (has) { showChecklist.value = true; return; }
     }
-    _openCamera();
+    await _openCamera();
   }
 
   Future<void> _startClockOutFlow() async {
     isClockOutFlow.value = true;
+    _currentChecklistType = 'clock_out';
     final jobId = selectedAssignment.value?.serviceJobId ?? activeLog.value?.id;
     if (jobId != null) {
+      _currentServiceJobId = jobId;
       final has = await _fetchChecklists(jobId, 'clock_out');
       if (has) { showChecklist.value = true; return; }
     }
-    _openCamera();
+    await _openCamera();
   }
 
-  // ── Checklist ─────────────────────────────────────────────────────────
   Future<bool> _fetchChecklists(int serviceJobId, String type) async {
     isChecklistLoading.value = true;
     checklistGroups.clear();
@@ -266,11 +270,23 @@ class TimeController extends GetxController {
           checklistGroups.value = (data['groups'] as List)
               .map((g) => ChecklistGroup.fromJson(g))
               .toList();
+
+          for (final group in checklistGroups) {
+            for (final item in group.items) {
+              final key = '${group.id}__${item.id}';
+              if (item.existingAnswer != null && item.existingAnswer!.isNotEmpty) {
+                checklistAnswers[key] = item.existingAnswer!;
+              }
+            }
+          }
+
           isChecklistLoading.value = false;
           return true;
         }
       }
-    } catch (_) {}
+    } catch (e, st) {
+      debugPrint('_fetchChecklists error: $e\n$st');
+    }
     isChecklistLoading.value = false;
     return false;
   }
@@ -281,7 +297,7 @@ class TimeController extends GetxController {
   Future<void> submitChecklist() async {
     for (final group in checklistGroups) {
       for (final item in group.items) {
-        final key = '${group.id}_${item.id}';
+        final key = '${group.id}__${item.id}';
         if (item.isRequired) {
           if (item.type == 'photo_upload') {
             if (checklistPhotos[key] == null && item.existingPhotoPath == null) {
@@ -300,43 +316,147 @@ class TimeController extends GetxController {
 
     isSubmitting.value = true;
     try {
-      final request = http.MultipartRequest('POST', Uri.parse('${ApiService.baseUrl}/time/save-checklist-answers'));
+      final request = http.MultipartRequest(
+        'POST',
+        Uri.parse('${ApiService.baseUrl}/time/save-checklist-answers'),
+      );
       request.headers['Accept']        = 'application/json';
       request.headers['Authorization'] = ApiService.token != null ? 'Bearer ${ApiService.token}' : '';
 
+      if (_currentServiceJobId != null) {
+        request.fields['service_job_id'] = _currentServiceJobId.toString();
+      }
+      request.fields['type'] = _currentChecklistType;
+
       checklistAnswers.forEach((key, value) {
-        final parts = key.split('_');
-        request.fields['answers[${parts[0]}][${parts[1]}]'] = value;
+        final idx      = key.indexOf('__');
+        final groupId  = key.substring(0, idx);
+        final itemId   = key.substring(idx + 2);
+        request.fields['answers[$groupId][$itemId]'] = value;
       });
+
       for (final entry in checklistPhotos.entries) {
-        final parts = entry.key.split('_');
-        request.files.add(await http.MultipartFile.fromPath('photos[${parts[0]}][${parts[1]}]', entry.value.path));
+        final idx     = entry.key.indexOf('__');
+        final groupId = entry.key.substring(0, idx);
+        final itemId  = entry.key.substring(idx + 2);
+        request.files.add(
+          await http.MultipartFile.fromPath(
+            'photos[$groupId][$itemId]',
+            entry.value.path,
+          ),
+        );
       }
 
-      final res = await request.send();
-      if (res.statusCode == 200) {
+      final streamedRes = await request.send();
+      final body        = await streamedRes.stream.bytesToString();
+
+      debugPrint('submitChecklist response [${streamedRes.statusCode}]: $body');
+
+      if (streamedRes.statusCode == 200) {
         showChecklist.value = false;
-        _openCamera();
+        await _openCamera();
       } else {
-        final body = await res.stream.bytesToString();
-        final data = jsonDecode(body);
-        AppFeedback.showError(data['message'] ?? 'Failed to save checklist.');
+        try {
+          final data = jsonDecode(body);
+          if (data['errors'] != null) {
+            final errors = data['errors'] as Map<String, dynamic>;
+            final firstMsg = (errors.values.first as List).first.toString();
+            AppFeedback.showError(firstMsg);
+          } else {
+            AppFeedback.showError(data['message'] ?? 'Failed to save checklist.');
+          }
+        } catch (_) {
+          AppFeedback.showError('Failed to save checklist. (${streamedRes.statusCode})');
+        }
       }
-    } catch (_) {
-      AppFeedback.showError('Failed to save checklist.');
+    } catch (e, st) {
+      debugPrint('submitChecklist exception: $e\n$st');
+      AppFeedback.showError('Failed to save checklist: $e');
     }
     isSubmitting.value = false;
   }
 
-  // ── Camera ────────────────────────────────────────────────────────────
   Future<void> _openCamera() async {
+    final ready = await _ensureLocationPermission();
+    if (!ready) return;
+
     capturedImagePath.value = null;
     isCameraReady.value     = false;
     showCameraScreen.value  = true;
     locationStatus.value    = 'Getting location…';
     userLat = userLng       = null;
     await _initCamera();
-    _fetchLocation();
+    await _fetchLocation();
+  }
+  Future<bool> _ensureLocationPermission() async {
+    bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
+    if (!serviceEnabled) {
+      final confirmed = await AppFeedback.showConfirm(
+        title: 'Location Required',
+        message: 'GPS is turned off. Please enable it to clock in.',
+        confirmText: 'Open Settings',
+        cancelText: 'Cancel',
+      );
+      if (!confirmed) return false;
+
+      await Geolocator.openLocationSettings();
+
+      for (int i = 0; i < 30; i++) {
+        await Future.delayed(const Duration(seconds: 1));
+        if (await Geolocator.isLocationServiceEnabled()) break;
+      }
+
+      serviceEnabled = await Geolocator.isLocationServiceEnabled();
+      if (!serviceEnabled) {
+        AppFeedback.showError('GPS is still off. Please enable it and try again.');
+        return false;
+      }
+    }
+
+    LocationPermission perm = await Geolocator.checkPermission();
+
+    if (perm == LocationPermission.denied) {
+      perm = await Geolocator.requestPermission();
+      if (perm == LocationPermission.denied) {
+        AppFeedback.showError('Location permission is required to clock in.');
+        return false;
+      }
+    }
+
+    if (perm == LocationPermission.deniedForever) {
+      final confirmed = await AppFeedback.showConfirm(
+        title: 'Location Permission Blocked',
+        message:
+            'You previously denied location access permanently.\n\n'
+            'Tap "Open Settings", then go to Permissions → Location and set it to "Allow while using app".',
+        confirmText: 'Open Settings',
+        cancelText: 'Cancel',
+      );
+      if (!confirmed) return false;
+
+      await Geolocator.openAppSettings();
+
+      for (int i = 0; i < 30; i++) {
+        await Future.delayed(const Duration(seconds: 1));
+        final updated = await Geolocator.checkPermission();
+        if (updated != LocationPermission.denied &&
+            updated != LocationPermission.deniedForever) {
+          return true;
+        }
+      }
+
+      final stillDenied = await Geolocator.checkPermission();
+      if (stillDenied == LocationPermission.denied ||
+          stillDenied == LocationPermission.deniedForever) {
+        AppFeedback.showError(
+          'Location permission is still blocked. '
+          'Please allow it in Settings → Apps → [App Name] → Permissions.',
+        );
+        return false;
+      }
+    }
+
+    return true;
   }
 
   Future<void> _initCamera() async {
@@ -351,28 +471,23 @@ class TimeController extends GetxController {
       await ctrl.initialize();
       cameraController.value = ctrl;
       isCameraReady.value = true;
-    } catch (_) {}
+    } catch (e, st) {
+      debugPrint('_initCamera error: $e\n$st');
+    }
   }
 
   Future<void> _fetchLocation() async {
     try {
-      if (!await Geolocator.isLocationServiceEnabled()) {
-        await Geolocator.openLocationSettings();
-        locationStatus.value = 'Location unavailable';
-        return;
-      }
-      LocationPermission perm = await Geolocator.checkPermission();
-      if (perm == LocationPermission.denied) perm = await Geolocator.requestPermission();
-      if (perm == LocationPermission.deniedForever) {
-        await Geolocator.openAppSettings();
-        locationStatus.value = 'Location unavailable';
-        return;
-      }
-      final pos = await Geolocator.getCurrentPosition(desiredAccuracy: LocationAccuracy.high);
+      locationStatus.value = 'Getting location…';
+      final pos = await Geolocator.getCurrentPosition(
+        desiredAccuracy: LocationAccuracy.high,
+        timeLimit: const Duration(seconds: 15),
+      );
       userLat = pos.latitude;
       userLng = pos.longitude;
       locationStatus.value = 'Location found ✓';
-    } catch (_) {
+    } catch (e) {
+      debugPrint('_fetchLocation error: $e');
       locationStatus.value = 'Location unavailable';
     }
   }
@@ -384,7 +499,9 @@ class TimeController extends GetxController {
     try {
       final file = await ctrl.takePicture();
       capturedImagePath.value = file.path;
-    } catch (_) {}
+    } catch (e, st) {
+      debugPrint('capturePhoto error: $e\n$st');
+    }
     isCapturing.value = false;
   }
 
@@ -403,7 +520,6 @@ class TimeController extends GetxController {
     isCameraReady.value = false;
   }
 
-  // ── Clock In API ──────────────────────────────────────────────────────
   Future<void> _doClockIn() async {
     isSubmitting.value = true;
     try {
@@ -448,13 +564,13 @@ class TimeController extends GetxController {
       } else {
         AppFeedback.showError(data['message'] ?? 'Error clocking in.');
       }
-    } catch (_) {
+    } catch (e, st) {
+      debugPrint('_doClockIn error: $e\n$st');
       AppFeedback.showError('Error clocking in.');
     }
     isSubmitting.value = false;
   }
 
-  // ── Clock Out API ─────────────────────────────────────────────────────
   Future<void> _doClockOut() async {
     isSubmitting.value = true;
     try {
@@ -464,7 +580,11 @@ class TimeController extends GetxController {
       final res = await http.post(
         Uri.parse('${ApiService.baseUrl}/time/clock-out'),
         headers: ApiService.headers,
-        body: jsonEncode({'photo': b64}),
+        body: jsonEncode({
+            'photo': b64,
+            'lat': userLat,
+            'lng': userLng,
+        }),
       );
 
       final data = jsonDecode(res.body);
@@ -475,13 +595,13 @@ class TimeController extends GetxController {
       } else {
         AppFeedback.showError(data['message'] ?? 'Error clocking out.');
       }
-    } catch (_) {
+    } catch (e, st) {
+      debugPrint('_doClockOut error: $e\n$st');
       AppFeedback.showError('Error clocking out.');
     }
     isSubmitting.value = false;
   }
 
-  // ── Time helpers ──────────────────────────────────────────────────────
   int _londonMinutes() {
     final now = DateTime.now().toUtc().add(const Duration(hours: 1));
     return now.hour * 60 + now.minute;
@@ -498,8 +618,8 @@ class TimeController extends GetxController {
   }
 
   String _format12(String hhmm) {
-    final p  = hhmm.split(':');
-    final h  = int.parse(p[0]);
+    final p   = hhmm.split(':');
+    final h   = int.parse(p[0]);
     final h12 = h % 12 == 0 ? 12 : h % 12;
     return '$h12:${p[1]} ${h >= 12 ? 'PM' : 'AM'}';
   }
