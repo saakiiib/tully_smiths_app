@@ -208,6 +208,12 @@ class _AssignmentFormState extends State<_AssignmentForm> {
                   initialDate: DateTime.tryParse(dateCtrl.text) ?? DateTime.now(),
                   firstDate: DateTime(2024),
                   lastDate: DateTime(2027),
+                  builder: (ctx, child) => Theme(
+                    data: Theme.of(ctx).copyWith(
+                      colorScheme: const ColorScheme.light(primary: AppColors.primary),
+                    ),
+                    child: child!,
+                  ),
                 );
                 if (picked != null) dateCtrl.text = widget.ctrl.fmt(picked);
               },
@@ -233,7 +239,16 @@ class _AssignmentFormState extends State<_AssignmentForm> {
                       const SizedBox(height: 6),
                       GestureDetector(
                         onTap: () async {
-                          final picked = await showTimePicker(context: context, initialTime: TimeOfDay.now());
+                          final picked = await showTimePicker(
+                            context: context,
+                            initialTime: TimeOfDay.now(),
+                            builder: (ctx, child) => Theme(
+                              data: Theme.of(ctx).copyWith(
+                                colorScheme: const ColorScheme.light(primary: AppColors.primary),
+                              ),
+                              child: child!,
+                            ),
+                          );
                           if (picked != null) {
                             startCtrl.text = '${picked.hour.toString().padLeft(2, '0')}:${picked.minute.toString().padLeft(2, '0')}';
                           }
@@ -260,7 +275,16 @@ class _AssignmentFormState extends State<_AssignmentForm> {
                       const SizedBox(height: 6),
                       GestureDetector(
                         onTap: () async {
-                          final picked = await showTimePicker(context: context, initialTime: TimeOfDay.now());
+                          final picked = await showTimePicker(
+                            context: context,
+                            initialTime: TimeOfDay.now(),
+                            builder: (ctx, child) => Theme(
+                              data: Theme.of(ctx).copyWith(
+                                colorScheme: const ColorScheme.light(primary: AppColors.primary),
+                              ),
+                              child: child!,
+                            ),
+                          );
                           if (picked != null) {
                             endCtrl.text = '${picked.hour.toString().padLeft(2, '0')}:${picked.minute.toString().padLeft(2, '0')}';
                           }

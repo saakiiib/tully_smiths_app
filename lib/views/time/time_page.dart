@@ -228,19 +228,22 @@ class _ActiveLogCard extends StatelessWidget {
             const SizedBox(height: 18),
             SizedBox(
               width: double.infinity,
-              child: Obx(() => ElevatedButton.icon(
-                onPressed: ctrl.isSubmitting.value ? null : ctrl.onClockOutTapped,
-                icon: ctrl.isSubmitting.value
-                    ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
-                    : const Icon(Icons.stop_circle_outlined, size: 18),
-                label: const Text('Clock Out'),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.red.shade600,
-                  foregroundColor: Colors.white,
-                  padding: const EdgeInsets.symmetric(vertical: 13),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                ),
-              )),
+              child: Obx(() {
+                final busy = ctrl.isSubmitting.value || ctrl.isCheckingLocation.value;
+                return ElevatedButton.icon(
+                  onPressed: busy ? null : ctrl.onClockOutTapped,
+                  icon: busy
+                      ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
+                      : const Icon(Icons.stop_circle_outlined, size: 18),
+                  label: const Text('Clock Out'),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.red.shade600,
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(vertical: 13),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                  ),
+                );
+              }),
             ),
           ],
         ),
@@ -340,22 +343,25 @@ class _StartCard extends StatelessWidget {
               }),
             Padding(
               padding: const EdgeInsets.all(14),
-              child: Obx(() => SizedBox(
-                width: double.infinity,
-                child: ElevatedButton.icon(
-                  onPressed: ctrl.isSubmitting.value ? null : ctrl.onClockInTapped,
-                  icon: ctrl.isSubmitting.value
-                      ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
-                      : const Icon(Icons.login_rounded, size: 18),
-                  label: const Text('Clock In'),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: AppColors.primary,
-                    foregroundColor: Colors.white,
-                    padding: const EdgeInsets.symmetric(vertical: 14),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+              child: Obx(() {
+                final busy = ctrl.isSubmitting.value || ctrl.isCheckingLocation.value;
+                return SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton.icon(
+                    onPressed: busy ? null : ctrl.onClockInTapped,
+                    icon: busy
+                        ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
+                        : const Icon(Icons.login_rounded, size: 18),
+                    label: const Text('Clock In'),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: AppColors.primary,
+                      foregroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(vertical: 14),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                    ),
                   ),
-                ),
-              )),
+                );
+              }),
             ),
           ],
         ),

@@ -469,6 +469,12 @@ class _ManualClockInSheetState extends State<_ManualClockInSheet> {
       initialDate: initial,
       firstDate: DateTime.now().subtract(const Duration(days: 365)),
       lastDate: DateTime.now(),
+      builder: (ctx, child) => Theme(
+        data: Theme.of(ctx).copyWith(
+          colorScheme: const ColorScheme.light(primary: AppColors.primary),
+        ),
+        child: child!,
+      ),
     );
     if (date == null) return null;
     if (!context.mounted) return null;

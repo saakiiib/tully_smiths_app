@@ -127,20 +127,20 @@ class TimeLog {
 }
 
 class TimeController extends GetxController {
-  final isLoading        = false.obs;
-  final todayAssignments = <JobAssignment>[].obs;
-  final activeLog        = Rxn<TimeLog>();
-  final recentLogs       = <TimeLog>[].obs;
-  final todayHours       = '0.00'.obs;
-  final weekHours        = '0.00'.obs;
-  final monthHours       = '0.00'.obs;
+  final isLoading          = false.obs;
+  final todayAssignments   = <JobAssignment>[].obs;
+  final activeLog          = Rxn<TimeLog>();
+  final recentLogs         = <TimeLog>[].obs;
+  final todayHours         = '0.00'.obs;
+  final weekHours          = '0.00'.obs;
+  final monthHours         = '0.00'.obs;
 
-  final cameraController  = Rxn<CameraController>();
-  final capturedImagePath = RxnString();
-  final isCameraReady     = false.obs;
-  final isCapturing       = false.obs;
+  final cameraController   = Rxn<CameraController>();
+  final capturedImagePath  = RxnString();
+  final isCameraReady      = false.obs;
+  final isCapturing        = false.obs;
 
-  final locationStatus = 'Getting location…'.obs;
+  final locationStatus     = 'Getting location…'.obs;
   double? userLat, userLng;
 
   final selectedAssignment = Rxn<JobAssignment>();
@@ -150,11 +150,13 @@ class TimeController extends GetxController {
   final checklistPhotos    = <String, File>{};
   final isChecklistLoading = false.obs;
 
-  final isClockOutFlow   = false.obs;
-  final isSubmitting     = false.obs;
-  final forceClockIn     = false.obs;
-  final showCameraScreen = false.obs;
-  final showChecklist    = false.obs;
+  final isClockOutFlow     = false.obs;
+  final isSubmitting       = false.obs;
+  final isCheckingLocation = false.obs;
+  final forceClockIn       = false.obs;
+  final forceLocation      = false.obs;
+  final showCameraScreen   = false.obs;
+  final showChecklist      = false.obs;
 
   String _currentChecklistType = 'clock_in';
   int? _currentServiceJobId;
@@ -207,7 +209,8 @@ class TimeController extends GetxController {
         if (!confirmed) return;
       }
     }
-    _startClockInFlow();
+
+    await _checkLocation(a.postcode, 'clock_in');
   }
 
   Future<void> onClockOutTapped() async {
@@ -227,7 +230,56 @@ class TimeController extends GetxController {
         if (!confirmed) return;
       }
     }
-    _startClockOutFlow();
+
+    await _checkLocation(selectedAssignment.value?.postcode, 'clock_out');
+  }
+
+  Future<void> _checkLocation(String? postcode, String type) async {
+    final onProceed = type == 'clock_in' ? _startClockInFlow : _startClockOutFlow;
+    final action    = type == 'clock_in' ? 'clock in' : 'clock out';
+
+    if (postcode == null || postcode.isEmpty) {
+      await onProceed();
+      return;
+    }
+
+    isCheckingLocation.value = true;
+    try {
+      final pos = await Geolocator.getCurrentPosition(
+        desiredAccuracy: LocationAccuracy.high,
+        timeLimit: const Duration(seconds: 15),
+      );
+
+      final geoRes = await http.get(
+        Uri.parse('https://api.postcodes.io/postcodes/${Uri.encodeComponent(postcode)}'),
+      );
+
+      if (geoRes.statusCode == 200) {
+        final geoData = jsonDecode(geoRes.body);
+        if (geoData['status'] == 200) {
+          final jobLat = (geoData['result']['latitude'] as num).toDouble();
+          final jobLng = (geoData['result']['longitude'] as num).toDouble();
+          final dist   = Geolocator.distanceBetween(pos.latitude, pos.longitude, jobLat, jobLng);
+
+          if (dist > 100) {
+            isCheckingLocation.value = false;
+            final confirmed = await AppFeedback.showConfirm(
+              title: 'Outside Job Location',
+              message: 'You are ${dist.round()}m away from the job site. Do you want to $action anyway?',
+              confirmText: 'Proceed',
+              cancelText: 'Cancel',
+            );
+            if (!confirmed) return;
+            if (type == 'clock_in') forceLocation.value = true;
+          }
+        }
+      }
+    } catch (e) {
+      debugPrint('_checkLocation error: $e');
+    }
+
+    isCheckingLocation.value = false;
+    await onProceed();
   }
 
   Future<void> _startClockInFlow() async {
@@ -329,9 +381,9 @@ class TimeController extends GetxController {
       request.fields['type'] = _currentChecklistType;
 
       checklistAnswers.forEach((key, value) {
-        final idx      = key.indexOf('__');
-        final groupId  = key.substring(0, idx);
-        final itemId   = key.substring(idx + 2);
+        final idx     = key.indexOf('__');
+        final groupId = key.substring(0, idx);
+        final itemId  = key.substring(idx + 2);
         request.fields['answers[$groupId][$itemId]'] = value;
       });
 
@@ -350,8 +402,6 @@ class TimeController extends GetxController {
       final streamedRes = await request.send();
       final body        = await streamedRes.stream.bytesToString();
 
-      debugPrint('submitChecklist response [${streamedRes.statusCode}]: $body');
-
       if (streamedRes.statusCode == 200) {
         showChecklist.value = false;
         await _openCamera();
@@ -359,7 +409,7 @@ class TimeController extends GetxController {
         try {
           final data = jsonDecode(body);
           if (data['errors'] != null) {
-            final errors = data['errors'] as Map<String, dynamic>;
+            final errors   = data['errors'] as Map<String, dynamic>;
             final firstMsg = (errors.values.first as List).first.toString();
             AppFeedback.showError(firstMsg);
           } else {
@@ -388,6 +438,7 @@ class TimeController extends GetxController {
     await _initCamera();
     await _fetchLocation();
   }
+
   Future<bool> _ensureLocationPermission() async {
     bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
     if (!serviceEnabled) {
@@ -531,10 +582,11 @@ class TimeController extends GetxController {
         headers: ApiService.headers,
         body: jsonEncode({
           'job_assignment_id': selectedAssignment.value!.id,
-          'photo': b64,
-          'lat': userLat,
-          'lng': userLng,
-          'force': forceClockIn.value,
+          'photo':             b64,
+          'lat':               userLat,
+          'lng':               userLng,
+          'force':             forceClockIn.value,
+          'force_location':    forceLocation.value,
         }),
       );
 
@@ -543,9 +595,9 @@ class TimeController extends GetxController {
       if (res.statusCode == 200 && data['warning'] == true) {
         closeCamera();
         final confirmed = await AppFeedback.showConfirm(
-          title: 'Already Worked Today',
+          title: 'Confirm Clock In',
           message: data['message'],
-          confirmText: 'Clock In Again',
+          confirmText: 'Clock In',
           cancelText: 'Cancel',
         );
         if (confirmed) {
@@ -559,7 +611,8 @@ class TimeController extends GetxController {
       if (res.statusCode == 200 || res.statusCode == 201) {
         AppFeedback.showSuccess(data['message'] ?? 'Clocked in successfully.');
         closeCamera();
-        forceClockIn.value = false;
+        forceClockIn.value  = false;
+        forceLocation.value = false;
         await loadData();
       } else {
         AppFeedback.showError(data['message'] ?? 'Error clocking in.');
@@ -581,9 +634,9 @@ class TimeController extends GetxController {
         Uri.parse('${ApiService.baseUrl}/time/clock-out'),
         headers: ApiService.headers,
         body: jsonEncode({
-            'photo': b64,
-            'lat': userLat,
-            'lng': userLng,
+          'photo': b64,
+          'lat':   userLat,
+          'lng':   userLng,
         }),
       );
 
