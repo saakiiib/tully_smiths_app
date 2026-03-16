@@ -14,4 +14,5 @@ class AppColors {
   static const Color error = Color(0xFFEF4444);
   static const Color white = Color(0xFFFFFFFF);
   static const Color warning = Color(0xFFF59E0B);
+  static const Color backgroundGlass = Color(0xFFEDE8E0);
 }
