@@ -1,8 +1,6 @@
 import 'dart:io';
-import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:image_picker/image_picker.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../../constants/app_colors.dart';
 import '../../constants/app_text_styles.dart';
@@ -10,6 +8,7 @@ import '../../controllers/job_detail_controller.dart';
 import '../../services/api_service.dart';
 import '../../widgets/app_app_bar.dart';
 import '../../widgets/app_drawer.dart';
+import 'package:flutter/services.dart';
 
 class JobDetailPage extends StatelessWidget {
   final int jobId;
@@ -406,17 +405,18 @@ class _DocumentsTabState extends State<_DocumentsTab> {
     super.dispose();
   }
 
+  static const _photoPickerChannel = MethodChannel('android_photo_picker');
+
   Future<void> _pickFile() async {
-    final result = await FilePicker.platform.pickFiles(
-      type: FileType.custom,
-      allowedExtensions: ['jpg', 'jpeg', 'png', 'pdf'],
-    );
-    if (result != null && result.files.single.path != null) {
-      setState(() {
-        pickedFile = File(result.files.single.path!);
-        pickedFileName = result.files.single.name;
-      });
-    }
+    try {
+      final String? uri = await _photoPickerChannel.invokeMethod('pickImage');
+      if (uri != null) {
+        setState(() {
+          pickedFile = File(uri);
+          pickedFileName = uri.split('/').last;
+        });
+      }
+    } catch (_) {}
   }
 
   void _showUploadSheet(BuildContext context) {
@@ -1085,6 +1085,17 @@ class _ChecklistCardState extends State<_ChecklistCard> {
   final answers = <String, String>{};
   final photoFiles = <String, File>{};
 
+  static const _photoPickerChannel = MethodChannel('android_photo_picker');
+
+  Future<String?> _pickImageWithPhotoPicker() async {
+    try {
+      final String? uri = await _photoPickerChannel.invokeMethod('pickImage');
+      return uri;
+    } catch (_) {
+      return null;
+    }
+  }
+
   @override
   void initState() {
     super.initState();
@@ -1283,16 +1294,11 @@ class _ChecklistCardState extends State<_ChecklistCard> {
                                   const SizedBox(height: 8),
                                   GestureDetector(
                                     onTap: () async {
-                                      final picker = ImagePicker();
-                                      final picked = await picker.pickImage(
-                                        source: ImageSource.gallery,
-                                        imageQuality: 75,
-                                      );
-                                      if (picked != null) {
+                                      final uri =
+                                          await _pickImageWithPhotoPicker();
+                                      if (uri != null) {
                                         setPhotoState(
-                                          () => photoFiles[itemId] = File(
-                                            picked.path,
-                                          ),
+                                          () => photoFiles[itemId] = File(uri),
                                         );
                                       }
                                     },

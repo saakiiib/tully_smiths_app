@@ -13,7 +13,7 @@ plugins {
 }
 
 android {
-    namespace = "com.example.tully_smith"
+    namespace = "com.tullysmiths.taskmanager"
     compileSdk = 36
     buildToolsVersion = "34.0.0"
     ndkVersion = flutter.ndkVersion
@@ -41,7 +41,7 @@ android {
     }
 
     defaultConfig {
-        applicationId = "com.example.tully_smith"
+        applicationId = "com.tullysmiths.taskmanager"
         minSdk = flutter.minSdkVersion
         targetSdk = 36
         versionCode = flutter.versionCode
